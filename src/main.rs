@@ -4,6 +4,7 @@ mod packet_parser;
 use std::env;
 use frame::{Frame, update_frame_id};
 use packet_parser::{parse_packet, get_frame_info};
+use crate::packet_parser::get_packet_metadata;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -27,16 +28,8 @@ fn main() {
     }) {
         println!("--- NEW FRAME ---");
         println!("{}", frames.len());
-
-        let combined_string: String = packet
-            .iter()
-            .flat_map(|layer| layer.iter().map(|data| format!("\n\t{}", data.display())))
-            .collect();
-
-        println!("{}", combined_string);
-
-        let metadata = parse_packet(&packet);
-        let mut frame = get_frame_info(metadata);
+        let mut frame = get_frame_info(&packet);
+        println!("{}", frame.get_global_info());
 
         update_frame_id(&mut frame, &frames);
         frames.push(frame);
