@@ -36,10 +36,6 @@ impl Frame {
         self.id
     }
 
-    pub fn set_id(&mut self, new_id: usize) {
-        self.id = new_id;
-    }
-
     pub fn get_time(&self) -> f64 {
         self.time
     }
