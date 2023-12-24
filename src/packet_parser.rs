@@ -8,28 +8,12 @@ pub fn parse_packet_data(packet: &Packet) -> String {
         .collect()
 }
 
-fn get_type(metadata: &String) -> String {
-    let mut packet_type = "Protocol not found".to_string();
-
-    for line in metadata.lines() {
-        if line.trim().starts_with("Type:") {
-            if let Some(types) = line.split(':').nth(1) {
-                packet_type = types.trim().to_string();
-            }
-            return packet_type;
-        }
-    }
-
-    return packet_type;
-}
-
 fn get_tls(metadata: &String) -> String {
     let mut tls_version = "TLS".to_string();
 
     for line in metadata.lines() {
         if line.trim().starts_with("TLSv1.") {
-            let tls_version = line.split_whitespace().next().unwrap_or_default();
-            return tls_version.to_string();
+            tls_version = line.split_whitespace().next().unwrap().to_string();
         }
     }
 
@@ -86,10 +70,30 @@ fn get_time(metadata: &String) -> f64 {
 }
 
 fn get_source(metadata: &String) -> String {
-    String::new()
+    let mut source_address = "".to_string();
+
+    for line in metadata.lines() {
+        if line.starts_with("Source Address:") {
+            if let Some(start_idx) = line.find(':') {
+                source_address = line[start_idx + 2..].to_string();
+            }
+        }
+    }
+
+    source_address
 }
 fn get_destination(metadata: &String) -> String {
-    String::new()
+    let mut destination_address = "".to_string();
+
+    for line in metadata.lines() {
+        if line.starts_with("Destination Address:") {
+            if let Some(start_idx) = line.find(':') {
+                destination_address = line[start_idx + 2..].to_string();
+            }
+        }
+    }
+
+    destination_address
 }
 
 fn get_protocol(metadata: &String) -> String {
@@ -118,10 +122,10 @@ fn get_protocol(metadata: &String) -> String {
     protocol
 }
 
-fn get_length(metadata: &String) -> i32 {
+fn get_length(_metadata: &String) -> i32 {
     0
 }
 
-fn get_info(metadata: &String) -> String {
+fn get_info(_metadata: &String) -> String {
     String::new()
 }
