@@ -5,14 +5,23 @@ pub struct Frame {
     source: String,
     destination: String,
     protocol: String,
-    length: u32,
+    length: i32,
     info: String,
 }
 
 impl Frame {
-    pub fn new(global_info: String, id: usize, time: f64, source: String, destination: String, protocol: String, length: u32, info: String) -> Self {
-        Self { global_info, id, time, source, destination, protocol, length, info }
+    pub fn new(
+        global_info: String, id: usize, time: f64,
+        source: String, destination: String, protocol: String,
+        length: i32, info: String,
+    ) -> Self {
+        Self {
+            global_info, id, time,
+            source, destination, protocol,
+            length, info,
+        }
     }
+
 
     pub fn get_global_info(&self) -> &String {
         &self.global_info
@@ -42,7 +51,7 @@ impl Frame {
         &self.protocol
     }
 
-    pub fn get_length(&self) -> u32 {
+    pub fn get_length(&self) -> i32 {
         self.length
     }
 
