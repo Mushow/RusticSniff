@@ -4,7 +4,7 @@ mod packet_parser;
 use std::{env, fs, process};
 use pnet::datalink;
 use rtshark::{RTSharkBuilder, RTSharkBuilderReady};
-use frame::{Frame, update_frame_id};
+use frame::{Frame};
 use packet_parser::get_frame_info;
 
 fn main() {
@@ -29,16 +29,13 @@ fn main() {
             None
         }
     } {
-        let mut frame = get_frame_info(&packet);
-        update_frame_id(&mut frame, &frames);
+        let frame = get_frame_info(&packet);
         frames.push(frame);
-
         let frame = frames.last().unwrap();
-        println!("{}\t{}\t{}\t{}\t{}\t{}\t{}",
+        println!("{}\t{:.6}\t{}\t{}\t{}\t{}\t{}",
                  frame.get_id(), frame.get_time(), frame.get_source(),
                  frame.get_destination(), frame.get_protocol(),
                  frame.get_length(), frame.get_info());
-
     }
 
 }
