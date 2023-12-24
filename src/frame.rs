@@ -16,9 +16,14 @@ impl Frame {
         length: i32, info: String,
     ) -> Self {
         Self {
-            global_info, id, time,
-            source, destination, protocol,
-            length, info,
+            global_info,
+            id,
+            time,
+            source,
+            destination,
+            protocol,
+            length,
+            info,
         }
     }
 
@@ -58,8 +63,4 @@ impl Frame {
     pub fn get_info(&self) -> &String {
         &self.info
     }
-}
-
-pub fn update_frame_id(frame: &mut Frame, frames: &Vec<Frame>) {
-    frame.set_id(frames.len() + 1);
 }
