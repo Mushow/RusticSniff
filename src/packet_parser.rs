@@ -69,31 +69,59 @@ fn get_time(metadata: &String) -> f64 {
     time
 }
 
-fn get_source(metadata: &String) -> String {
-    let mut source_address = "".to_string();
+fn get_source(metadata: &str) -> String {
+    let mut source = String::new();
+    let mut source_address_found = false;
 
     for line in metadata.lines() {
         if line.starts_with("Source Address:") {
+            source_address_found = true;
             if let Some(start_idx) = line.find(':') {
-                source_address = line[start_idx + 2..].to_string();
+                source = line[start_idx + 2..].trim().to_string();
+                break;
             }
         }
     }
 
-    source_address
+    if !source_address_found {
+        for line in metadata.lines() {
+            if line.starts_with("Source:") {
+                if let Some(start_idx) = line.find(':') {
+                    source = line[start_idx + 2..].trim().to_string();
+                    break;
+                }
+            }
+        }
+    }
+
+    source
 }
-fn get_destination(metadata: &String) -> String {
-    let mut destination_address = "".to_string();
+
+fn get_destination(metadata: &str) -> String {
+    let mut destination = String::new();
+    let mut destination_address_found = false;
 
     for line in metadata.lines() {
         if line.starts_with("Destination Address:") {
+            destination_address_found = true;
             if let Some(start_idx) = line.find(':') {
-                destination_address = line[start_idx + 2..].to_string();
+                destination = line[start_idx + 2..].trim().to_string();
             }
         }
     }
 
-    destination_address
+    if !destination_address_found {
+        for line in metadata.lines() {
+            if line.starts_with("Destination:") {
+                if let Some(start_idx) = line.find(':') {
+                    destination = line[start_idx + 2..].trim().to_string();
+                    break;
+                }
+            }
+        }
+    }
+
+    destination
 }
 
 fn get_protocol(metadata: &String) -> String {
