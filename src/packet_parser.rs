@@ -150,8 +150,23 @@ fn get_protocol(metadata: &String) -> String {
     protocol
 }
 
-fn get_length(_metadata: &String) -> i32 {
-    0
+fn get_length(metadata: &str) -> i32 {
+    let mut time = 0;
+
+    for line in metadata.lines() {
+        if line.trim().starts_with("Frame Length:") {
+            if let Some(start) = line.find(':') {
+                if let Some(end) = line.find("bytes") {
+                    let numeric_str: String = line[start + 1..end].chars().filter(|&c| c.is_digit(10)).collect();
+                    if let Ok(parsed_value) = numeric_str.parse::<i32>() {
+                        time = parsed_value;
+                    }
+                }
+            }
+        }
+    }
+
+    time
 }
 
 fn get_info(_metadata: &String) -> String {
