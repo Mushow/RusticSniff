@@ -25,106 +25,81 @@ pub fn get_frame_info(packet: &Packet) -> Frame {
 
     Frame::new(
         get_packet_metadata(&metadata),
-        get_id(&metadata),
-        get_time(&metadata),
-        get_source(&metadata),
-        get_destination(&metadata),
-        get_protocol(&metadata),
-        get_length(&metadata),
+        extract_id(&metadata),
+        extract_time(&metadata),
+        extract_source(&metadata),
+        extract_destination(&metadata),
+        extract_protocol(&metadata),
+        extract_frame_length(&metadata),
         get_info(&metadata))
+}
+
+fn extract_time(metadata: &String) -> f64 {
+    extract_numeric(&metadata, "Time since reference or first frame:")
+}
+
+fn extract_id(metadata: &String) -> usize {
+    extract_field(&metadata, "Frame Number:").parse().unwrap_or(0)
+}
+
+fn extract_frame_length(metadata: &String) -> i32 {
+    extract_field(&metadata, "Frame Length:")
+        .split("bytes")
+        .next()
+        .and_then(|s| s.trim().parse().ok())
+        .unwrap_or(0)
 }
 
 pub fn get_packet_metadata(metadata: &String) -> String {
     metadata.parse().unwrap()
 }
 
-fn get_id(metadata: &String) -> usize {
-    let mut id = 0;
-    for line in metadata.lines() {
-        if line.trim().starts_with("Frame Number:") {
-            if let Some(types) = line.split(':').nth(1) {
-                id = types.trim().parse().unwrap();
-            }
-            return id;
-        }
-    }
-
-    id
+fn extract_field(metadata: &str, field: &str) -> String {
+    metadata
+        .lines()
+        .find(|line| line.trim().starts_with(field))
+        .map(|line| line.split(':').nth(1).map(|s| s.trim().to_string()).unwrap_or_default())
+        .unwrap_or_default()
 }
 
-fn get_time(metadata: &String) -> f64 {
-    let mut time = 0.0;
-
-    for line in metadata.lines() {
-        if line.trim().starts_with("Time since reference or first frame:") {
-            if let Some(_time_str) = line.split(':').nth(1) {
-                let numeric_str: String = _time_str.chars().filter(|&c| c.is_digit(10) || c == '.').collect();
-                if let Ok(parsed_value) = numeric_str.parse::<f64>() {
-                    time = parsed_value;
-                }
-            }
-        }
-    }
-
-    time
+fn extract_numeric(metadata: &str, field: &str) -> f64 {
+    metadata
+        .lines()
+        .find(|line| line.trim().starts_with(field))
+        .and_then(|line| line.split(':').nth(1).map(|s| s.trim()))
+        .and_then(|_time_str| {
+            let numeric_str: String = _time_str.chars().filter(|&c| c.is_digit(10) || c == '.').collect();
+            numeric_str.parse().ok()
+        })
+        .unwrap_or(0.0)
 }
 
-fn get_source(metadata: &str) -> String {
-    let mut source = String::new();
-    let mut source_address_found = false;
+fn extract_source(metadata: &str) -> String {
+    let source_line = metadata
+        .lines()
+        .find(|line| line.starts_with("Source Address:"))
+        .or_else(|| metadata.lines().find(|line| line.starts_with("Source:")))
+        .unwrap_or_default();
 
-    for line in metadata.lines() {
-        if line.starts_with("Source Address:") {
-            source_address_found = true;
-            if let Some(start_idx) = line.find(':') {
-                source = line[start_idx + 2..].trim().to_string();
-                break;
-            }
-        }
-    }
-
-    if !source_address_found {
-        for line in metadata.lines() {
-            if line.starts_with("Source:") {
-                if let Some(start_idx) = line.find(':') {
-                    source = line[start_idx + 2..].trim().to_string();
-                    break;
-                }
-            }
-        }
-    }
-
-    source
+    extract_address_from_line(source_line)
 }
 
-fn get_destination(metadata: &str) -> String {
-    let mut destination = String::new();
-    let mut destination_address_found = false;
+fn extract_destination(metadata: &str) -> String {
+    let destination_line = metadata
+        .lines()
+        .find(|line| line.starts_with("Destination Address:"))
+        .or_else(|| metadata.lines().find(|line| line.starts_with("Destination:")))
+        .unwrap_or_default();
 
-    for line in metadata.lines() {
-        if line.starts_with("Destination Address:") {
-            destination_address_found = true;
-            if let Some(start_idx) = line.find(':') {
-                destination = line[start_idx + 2..].trim().to_string();
-            }
-        }
-    }
-
-    if !destination_address_found {
-        for line in metadata.lines() {
-            if line.starts_with("Destination:") {
-                if let Some(start_idx) = line.find(':') {
-                    destination = line[start_idx + 2..].trim().to_string();
-                    break;
-                }
-            }
-        }
-    }
-
-    destination
+    extract_address_from_line(destination_line)
 }
 
-fn get_protocol(metadata: &String) -> String {
+fn extract_address_from_line(line: &str) -> String {
+    let start_idx = line.find(':').unwrap_or(0);
+    line[start_idx + 2..].trim().to_string()
+}
+
+fn extract_protocol(metadata: &String) -> String {
     let mut protocol = String::new();
 
     for line in metadata.lines() {
@@ -148,25 +123,6 @@ fn get_protocol(metadata: &String) -> String {
     }
 
     protocol
-}
-
-fn get_length(metadata: &str) -> i32 {
-    let mut time = 0;
-
-    for line in metadata.lines() {
-        if line.trim().starts_with("Frame Length:") {
-            if let Some(start) = line.find(':') {
-                if let Some(end) = line.find("bytes") {
-                    let numeric_str: String = line[start + 1..end].chars().filter(|&c| c.is_digit(10)).collect();
-                    if let Ok(parsed_value) = numeric_str.parse::<i32>() {
-                        time = parsed_value;
-                    }
-                }
-            }
-        }
-    }
-
-    time
 }
 
 fn get_info(_metadata: &String) -> String {
