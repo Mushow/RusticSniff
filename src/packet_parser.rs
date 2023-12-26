@@ -8,18 +8,6 @@ pub fn parse_packet_data(packet: &Packet) -> String {
         .collect()
 }
 
-fn get_tls(metadata: &String) -> String {
-    let mut tls_version = "TLS".to_string();
-
-    for line in metadata.lines() {
-        if line.trim().starts_with("TLSv1.") {
-            tls_version = line.split_whitespace().next().unwrap().to_string();
-        }
-    }
-
-    return tls_version;
-}
-
 pub fn get_frame_info(packet: &Packet) -> Frame {
     let metadata = parse_packet_data(&packet);
 
@@ -32,22 +20,6 @@ pub fn get_frame_info(packet: &Packet) -> Frame {
         extract_protocol(&metadata),
         extract_frame_length(&metadata),
         get_info(&metadata))
-}
-
-fn extract_time(metadata: &String) -> f64 {
-    extract_numeric(&metadata, "Time since reference or first frame:")
-}
-
-fn extract_id(metadata: &String) -> usize {
-    extract_field(&metadata, "Frame Number:").parse().unwrap_or(0)
-}
-
-fn extract_frame_length(metadata: &String) -> i32 {
-    extract_field(&metadata, "Frame Length:")
-        .split("bytes")
-        .next()
-        .and_then(|s| s.trim().parse().ok())
-        .unwrap_or(0)
 }
 
 pub fn get_packet_metadata(metadata: &String) -> String {
@@ -74,6 +46,19 @@ fn extract_numeric(metadata: &str, field: &str) -> f64 {
         .unwrap_or(0.0)
 }
 
+fn extract_address_from_line(line: &str) -> String {
+    let start_idx = line.find(':').unwrap_or(0);
+    line[start_idx + 2..].trim().to_string()
+}
+
+fn extract_id(metadata: &String) -> usize {
+    extract_field(&metadata, "Frame Number:").parse().unwrap_or(0)
+}
+
+fn extract_time(metadata: &String) -> f64 {
+    extract_numeric(&metadata, "Time since reference or first frame:")
+}
+
 fn extract_source(metadata: &str) -> String {
     let source_line = metadata
         .lines()
@@ -92,11 +77,6 @@ fn extract_destination(metadata: &str) -> String {
         .unwrap_or_default();
 
     extract_address_from_line(destination_line)
-}
-
-fn extract_address_from_line(line: &str) -> String {
-    let start_idx = line.find(':').unwrap_or(0);
-    line[start_idx + 2..].trim().to_string()
 }
 
 fn extract_protocol(metadata: &String) -> String {
@@ -123,6 +103,26 @@ fn extract_protocol(metadata: &String) -> String {
     }
 
     protocol
+}
+
+fn get_tls(metadata: &String) -> String {
+    let mut tls_version = "TLS".to_string();
+
+    for line in metadata.lines() {
+        if line.trim().starts_with("TLSv1.") {
+            tls_version = line.split_whitespace().next().unwrap().to_string();
+        }
+    }
+
+    return tls_version;
+}
+
+fn extract_frame_length(metadata: &String) -> i32 {
+    extract_field(&metadata, "Frame Length:")
+        .split("bytes")
+        .next()
+        .and_then(|s| s.trim().parse().ok())
+        .unwrap_or(0)
 }
 
 fn get_info(_metadata: &String) -> String {
